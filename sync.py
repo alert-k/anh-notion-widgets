@@ -128,14 +128,14 @@ def gen_today_tasks(rm_pages):
         elif due and due < today and prop(t, "Status") != "미완료":  # yesterday's leftovers stay as a record
             api("PATCH", f"/pages/{t['id']}", {"properties": {"Status": {"select": {"name": "미완료"}}}})
 
-    def make(name, area, source, unit=None):
-        P = {"Name": {"title": rt(name)}, "Due": {"date": {"start": today}}, "Status": {"select": {"name": "대기"}},
+    def make(name, area, source, unit=None, due=None):
+        P = {"Name": {"title": rt(name)}, "Due": {"date": {"start": due or today}}, "Status": {"select": {"name": "대기"}},
              "Area": {"select": {"name": area}}, "Type": {"select": {"name": "Daily"}}, "Source": {"select": {"name": source}},
              "중요": {"select": {"name": "높음"}}, "긴급": {"select": {"name": "높음"}}}
         if unit:
             P["Roadmap Unit"] = {"relation": [{"id": unit["id"]}]}
         api("POST", "/pages", {"parent": {"database_id": I["tasks"]}, "properties": P})
-        existing.add(name)
+        existing.add(name + (due or ""))
 
     plan = LAB_PLAN or {}
     cards = [("복습", c) for c in plan.get("maintenance", [])] + [("오늘", c) for c in (plan.get("today_first") or [])[:1]]
@@ -144,6 +144,14 @@ def gen_today_tasks(rm_pages):
         u = unit_by_uid.get(c.get("unit_id"))
         if name not in existing and not (u and unit_status.get(u["id"]) == "완료"):
             make(name, "토스로드맵", "lab 플랜", u)
+    sun = (now.date() + timedelta(days=6 - now.weekday())).isoformat()
+    wk_have = {title_of(t) for t in auto if prop(t, "Due") == sun}
+    for c in plan.get("main", []) + plan.get("support", []):
+        name = f"[이번 주] {c['title']}"
+        u = unit_by_uid.get(c.get("unit_id"))
+        if name not in wk_have and not (u and unit_status.get(u["id"]) == "완료"):
+            make(name, "토스로드맵", "lab 플랜", u, due=sun)
+            wk_have.add(name)
     for r in query_all(I["routines"], {"property": "Active", "checkbox": {"equals": True}}):
         days = [x["name"] for x in r["properties"]["Days"]["multi_select"]]
         name = title_of(r)
@@ -158,6 +166,12 @@ rm = query_all(I["roadmap"])
 if lab_sync(rm, dj[0]["id"]):
     rm = query_all(I["roadmap"])
 gen_today_tasks(rm)
+try:  # keep time-horizon view filters (오늘/이번 주/이번 달/올해, 로드맵 '지금') current
+    from vlib import refresh
+    opens = [prop(r, "#") for r in rm if prop(r, "Status") not in ("완료", "건너뜀") and prop(r, "#")]
+    refresh(I, today, int(min(opens)) if opens else 1)
+except SystemExit as e:
+    print("view refresh skipped:", e)
 ph = {}
 for r in rm:
     k = prop(r, "Phase") or "?"
