@@ -280,3 +280,25 @@ if "guide:filled" not in I:
         num("제어센터/액션 버튼/Siri에 추가. 같은 방식으로 Tasks, Journal도 만들 수 있어요."),
         callout("Notion API는 버튼 블록·DB 뷰·DB 템플릿을 만들 수 없어서, '퀵버튼'은 위 CLI/단축어/위젯과 Notion 기본 'New' 버튼으로 대체했습니다. 원하면 Notion에서 DB 템플릿 버튼을 직접 추가하세요.", "⚠️")]})
     I["guide:filled"] = 1; save_ids(I)
+
+# ================= lab.horyz.io 동기화용 스키마 =================
+addprop("roadmap", {"복습 예정": D, "복습 회차": N, "완료일": D, "달성 Depth": sel("L1", "L2", "L3", "L4", "L5", "L6"),
+                    "Status": sel("대기", "진행 중", "완료", "막힘", "건너뜀")})
+addprop("journal", {"Lab 완료": TXT})
+db("weekly", hub["study"], "주간 계획 (lab.horyz.io 연동)", "🗓️", {"Week": T, "Hours": N, "Generated": D})
+print("lab schema OK")
+
+# ================= 오늘 할 일 자동화 스키마 =================
+addprop("tasks", {"Source": sel("수동", "lab 플랜", "루틴"), "Status": sel("대기", "진행 중", "완료", "미완료")})
+db("routines", hub["act"], "반복 루틴 (요일마다 오늘 할 일 자동 생성)", "🔁", {
+    "Routine": T, "Active": CB, "Days": {"multi_select": {"options": [{"name": d, "color": C[i % 9]} for i, d in enumerate("월화수목금토일")]}},
+    "Area": sel(*AREAS), "Notes": TXT})
+if "routines:seeded" not in I:
+    for name, area, note in [("알바 가기", "생활", "요일을 고르고 Active 체크하면 그 요일마다 오늘 할 일에 자동 생성돼요"),
+                              ("글 정리하기", "보안", "요일을 고르고 Active 체크"),
+                              ("Journal 작성하기", "생활", "매일이면 월~일 모두 선택")]:
+        api("POST", "/pages", {"parent": {"database_id": I["routines"]}, "properties": {
+            "Routine": {"title": rt(name)}, "Active": {"checkbox": False}, "Area": {"select": {"name": area}},
+            "Notes": {"rich_text": rt(note)}}})
+    I["routines:seeded"] = 1; save_ids(I)
+print("tasks automation schema OK")

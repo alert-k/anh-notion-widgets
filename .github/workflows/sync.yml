@@ -15,6 +15,7 @@ jobs:
         env:
           NOTION: ${{ secrets.NOTION }}
           IDS_JSON: ${{ secrets.IDS_JSON }}
+          LAB_SYNC_KEY: ${{ secrets.LAB_SYNC_KEY }}
           GH_USER: ${{ github.repository_owner }}
       - run: |
           git config user.name "anh-sync"; git config user.email "anh-sync@users.noreply.github.com"

@@ -50,10 +50,114 @@ try:
 except Exception as e:  # never block sync on GitHub
     print("github skipped:", e)
 
+# ---- 2b. lab.horyz.io progress -> Notion (lab is the source of truth; needs /api/roadmap/export + LAB_SYNC_KEY) ----
+LAB_PLAN = None
+LAB_OK = False
+ST = {"todo": "대기", "doing": "진행 중", "in_progress": "진행 중", "done": "완료", "blocked": "막힘"}
+
+
+def lab_sync(rm_pages, journal_page_id):
+    global LAB_PLAN, LAB_OK
+    key = os.environ.get("LAB_SYNC_KEY")
+    if not key:
+        return 0
+    req = urllib.request.Request("https://lab.horyz.io/api/roadmap/export",
+                                 headers={"X-Sync-Key": key, "User-Agent": "anh-sync"})
+    try:
+        data = json.load(urllib.request.urlopen(req, timeout=30))
+    except Exception as e:  # endpoint not deployed yet / key mismatch -> skip, never break sync
+        print("lab export skipped:", getattr(e, "code", e))
+        return 0
+    LAB_PLAN = data.get("plan")
+    LAB_OK = True
+    pr = data["progress"]
+    status, skip = pr.get("unit_status", {}), set(pr.get("understood_skip", []))
+    changed = 0
+    for pg in rm_pages:
+        uid = prop(pg, "Unit ID")
+        st = status.get(uid, "todo")
+        label = "건너뜀" if (uid in skip and st != "done") else ST.get(st, "진행 중")
+        want = {"Status": label, "복습 예정": pr.get("recall_due", {}).get(uid),
+                "복습 회차": pr.get("recall_step", {}).get(uid),
+                "완료일": pr.get("recall_day0", {}).get(uid) if label == "완료" else None,
+                "달성 Depth": pr.get("unit_depth", {}).get(uid)}
+        have = {k: prop(pg, k) for k in want}
+        if want == have:
+            continue
+        P = {"Status": {"select": {"name": label}},
+             "복습 예정": {"date": {"start": want["복습 예정"]} if want["복습 예정"] else None},
+             "복습 회차": {"number": want["복습 회차"]},
+             "완료일": {"date": {"start": want["완료일"]} if want["완료일"] else None},
+             "달성 Depth": {"select": {"name": want["달성 Depth"]} if want["달성 Depth"] else None}}
+        api("PATCH", f"/pages/{pg['id']}", {"properties": P})
+        changed += 1
+    # weekly plans: upsert by week
+    have_w = {prop(w, "Week"): w for w in query_all(I["weekly"])}
+    for wp in pr.get("weekly_plans", []):
+        P = {"Week": {"title": rt(wp["week"])}, "Hours": {"number": wp.get("hours")},
+             "Generated": {"date": {"start": (wp.get("generated") or "")[:10]}} if wp.get("generated") else {"date": None}}
+        if wp["week"] in have_w:
+            api("PATCH", f"/pages/{have_w[wp['week']]['id']}", {"properties": P})
+        else:
+            api("POST", "/pages", {"parent": {"database_id": I["weekly"]}, "properties": P})
+    # today's completions -> Journal
+    day0 = pr.get("recall_day0", {})
+    names = {prop(p_, "Unit ID"): title_of(p_) for p_ in rm_pages}
+    done_today = [names.get(u, u) for u, d in day0.items() if d == today and status.get(u) == "done"]
+    api("PATCH", f"/pages/{journal_page_id}", {"properties": {
+        "Lab 완료": {"rich_text": rt(", ".join(done_today))}, "공부": {"checkbox": bool(done_today)}}})
+    print("lab sync: units changed", changed, "| done today", len(done_today))
+    return changed
+
+
+# ---- 2c. today's tasks: lab plan + weekday routines; auto-check when lab unit is done ----
+def gen_today_tasks(rm_pages):
+    wd = "월화수목금토일"[now.weekday()]
+    unit_by_uid = {prop(p_, "Unit ID"): p_ for p_ in rm_pages}
+    unit_status = {p_["id"]: prop(p_, "Status") for p_ in rm_pages}
+    auto = query_all(I["tasks"], {"or": [{"property": "Source", "select": {"equals": "lab 플랜"}},
+                                         {"property": "Source", "select": {"equals": "루틴"}}]})
+    existing = {title_of(t) for t in auto if prop(t, "Due") == today}
+    for t in auto:
+        if t["properties"]["Done"]["checkbox"]:
+            continue
+        rel = t["properties"]["Roadmap Unit"]["relation"]
+        due = prop(t, "Due")
+        if rel and unit_status.get(rel[0]["id"]) == "완료":  # checked on lab -> checked here
+            api("PATCH", f"/pages/{t['id']}", {"properties": {"Done": {"checkbox": True}, "Status": {"select": {"name": "완료"}}}})
+        elif due and due < today and prop(t, "Status") != "미완료":  # yesterday's leftovers stay as a record
+            api("PATCH", f"/pages/{t['id']}", {"properties": {"Status": {"select": {"name": "미완료"}}}})
+
+    def make(name, area, source, unit=None):
+        P = {"Name": {"title": rt(name)}, "Due": {"date": {"start": today}}, "Status": {"select": {"name": "대기"}},
+             "Area": {"select": {"name": area}}, "Type": {"select": {"name": "Daily"}}, "Source": {"select": {"name": source}},
+             "중요": {"select": {"name": "높음"}}, "긴급": {"select": {"name": "높음"}}}
+        if unit:
+            P["Roadmap Unit"] = {"relation": [{"id": unit["id"]}]}
+        api("POST", "/pages", {"parent": {"database_id": I["tasks"]}, "properties": P})
+        existing.add(name)
+
+    plan = LAB_PLAN or {}
+    cards = [("복습", c) for c in plan.get("maintenance", [])] + [("오늘", c) for c in (plan.get("today_first") or [])[:1]]
+    for tag, c in cards:
+        name = f"[{tag}] {c['title']}"
+        u = unit_by_uid.get(c.get("unit_id"))
+        if name not in existing and not (u and unit_status.get(u["id"]) == "완료"):
+            make(name, "토스로드맵", "lab 플랜", u)
+    for r in query_all(I["routines"], {"property": "Active", "checkbox": {"equals": True}}):
+        days = [x["name"] for x in r["properties"]["Days"]["multi_select"]]
+        name = title_of(r)
+        if wd in days and name not in existing:
+            make(name, prop(r, "Area") or "생활", "루틴")
+
+
 # ---- 3. data.json ----
 out = {"updated": now.isoformat(timespec="minutes"), "today": today}
 
 rm = query_all(I["roadmap"])
+if lab_sync(rm, dj[0]["id"]):
+    rm = query_all(I["roadmap"])
+gen_today_tasks(rm)
 ph = {}
 for r in rm:
     k = prop(r, "Phase") or "?"
@@ -106,13 +210,11 @@ try:
     lab["challenges"] = sum(c.get("challenge_count", 0) for c in cats)
     lab["cats"] = len(cats)
     lab["board"] = len(get("https://lab.horyz.io/api/leaderboard")["leaderboard"])
-    if os.environ.get("LAB_TOKEN"):  # ponytail: auth scheme unverified (Bearer assumed); failure just skips
-        lab["progress"] = get("https://lab.horyz.io/api/roadmap/progress", os.environ["LAB_TOKEN"])
 except Exception as e:
     print("lab skipped:", e)
 
 QO = {"Q1": 0, "Q2": 1, "Q3": 2, "Q4": 3}
-alltasks = sorted(tasks, key=lambda t: (QO.get((prop(t, "Quadrant") or "Q9")[:2], 9), prop(t, "Due") or "9999"))
+alltasks = sorted(tasks, key=lambda t: (prop(t, "Due") != today, QO.get((prop(t, "Quadrant") or "Q9")[:2], 9), prop(t, "Due") or "9999"))
 tot = sum(p["total"] for p in out["roadmap"])
 dn = sum(p["done"] for p in out["roadmap"])
 est = sum(p["est"] for p in out["roadmap"])
@@ -136,7 +238,7 @@ R = {
             f"학습 {mins / 60:.0f}h / 목록 합계 {est:.0f}h{NL}{toss_mid}{NL}일정·주간 시간은 lab.horyz.io 기준",
     "lab": "lab.horyz.io" + NL
            + (f"챌린지 {lab['challenges']}개 · 카테고리 {lab['cats']} · 리더보드 {lab['board']}명" if "challenges" in lab else "(연결 실패)")
-           + (f"{NL}진행도 연동됨" if lab.get("progress") else f"{NL}진행도 연동: LAB_TOKEN 시크릿 필요"),
+           + (f"{NL}진행도 연동됨" if LAB_OK else f"{NL}진행도 연동 대기 (서버 export 배포 필요)"),
     "tasks": f"할 일 {len(tasks)}개{NL}" + NL.join(
         f"• {title_of(t)}" + (f"  ~{prop(t, 'Due')[5:]}" if prop(t, "Due") else "") + f"  {(prop(t, 'Quadrant') or '')[:2]}"
         for t in alltasks[:8]),
