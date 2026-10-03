@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-03T21:05+09:00",
+ "updated": "2026-10-03T21:22+09:00",
  "today": "2026-10-03",
  "roadmap": [
   {
@@ -102,10 +102,12 @@
   }
  ],
  "tasks": [],
- "tasks_open": 0,
+ "tasks_open": 8,
  "streak": 0,
  "today_score": 0,
  "month_days_ok": 0,
  "study_week_min": 0,
- "apps": {}
+ "apps": {
+  "관심": 1
+ }
 }

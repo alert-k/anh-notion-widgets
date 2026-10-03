@@ -148,11 +148,15 @@ db("ctf", hub["sec"], "CTF / Lab Log", "🚩", {
     "Category": sel("pwn", "web", "rev", "crypto", "forensics", "misc", "cloud"),
     "Result": sel("해결", "부분", "실패"), "Minutes": N, "Writeup": URL, "배운 점": TXT})
 
+addprop("roadmap", {"#": N})
+if "roadmap:nowindow" not in I:
+    api("PATCH", f"/databases/{I['roadmap']}", {"properties": {"Window": None}}); I["roadmap:nowindow"] = 1; save_ids(I)
+ORDER = {u["id"]: n + 1 for n, u in enumerate(u for ph in phases for u in ph["units"])}
 if "roadmap:seeded" not in I:
     seeded = set()
-    for ph in phases:
+    for ph in reversed(phases):
         pname = f'{ph["order"]:02d} {ph["title"]}'
-        for u in ph["units"]:
+        for u in reversed(ph["units"]):
             g = u.get("guide", {})
             kids = []
             if u.get("modern_note"):
@@ -167,7 +171,7 @@ if "roadmap:seeded" not in I:
                 kids += [h(3, "증거(Evidence)"), p(" · ".join(u["evidence"]))]
             depth = (u.get("depth_target") or "")[:2]
             props = {"Unit": {"title": rt(u["title"])}, "Unit ID": {"rich_text": rt(u["id"])},
-                     "Phase": {"select": {"name": pname}}, "Window": {"rich_text": rt(ph.get("window", ""))},
+                     "#": {"number": ORDER[u["id"]]}, "Phase": {"select": {"name": pname}},
                      "Est hours": {"number": u.get("est_hours") or 0}, "Status": {"select": {"name": "대기"}}}
             if u.get("kind") in ("study", "lab", "project", "research", "review"):
                 props["Kind"] = {"select": {"name": u["kind"]}}
