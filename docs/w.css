@@ -1,4 +1,4 @@
-:root{--bg:#f8f4ea;--fg:#2b2328;--mut:#856165;--card:#fffdf7;--ac:#6f62b0;--bd:#e9c8bd}
+:root{--bg:#f8f4ea;--fg:#2b2328;--mut:#856165;--card:#fffdf7;--ac:#4a6fd0;--bd:#e9c8bd}
 @media(prefers-color-scheme:dark){:root{--bg:#1d1a26;--fg:#f3ece4;--mut:#c9a9a3;--card:#272336;--ac:#8fd3d8;--bd:#3a3450}}
 *{box-sizing:border-box}body{margin:0;padding:12px;background:var(--bg);color:var(--fg);font:14px/1.4 system-ui,"Apple SD Gothic Neo","Malgun Gothic",sans-serif}
 .g{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}.c{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px}

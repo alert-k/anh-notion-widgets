@@ -36,7 +36,7 @@ if not dj:
     dj = [api("POST", "/pages", {"parent": {"database_id": I["journal"]}, "properties": {
         "Title": {"title": rt(f"{today} Daily")}, "Type": {"select": {"name": "Daily"}},
         "Date": {"date": {"start": today}}},
-        "children": [H("🌟 오늘의 Highlight"), P(), H("🙏 감사 3가지"), P(), H("📚 배운 것"), P(),
+        "children": [H("🧙 오늘의 여행 일기 — Highlight"), P(), H("🙏 감사 3가지"), P(), H("📚 배운 것"), P(),
                      H("🧠 오늘의 생각"), P(), H("🔁 내일 할 일 (Top 3)"), P()]})]
 
 # ---- 2. GitHub commits today (public search; ceiling: private repos not counted) ----
