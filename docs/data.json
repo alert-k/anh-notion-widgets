@@ -1,0 +1,111 @@
+{
+ "updated": "2026-10-03T20:57+09:00",
+ "today": "2026-10-03",
+ "roadmap": [
+  {
+   "phase": "00 Foundation",
+   "total": 13,
+   "done": 0,
+   "est": 280,
+   "min": 0
+  },
+  {
+   "phase": "01 Low-Level / System Security",
+   "total": 8,
+   "done": 0,
+   "est": 320,
+   "min": 0
+  },
+  {
+   "phase": "02 Web / Application Security",
+   "total": 7,
+   "done": 0,
+   "est": 275,
+   "min": 0
+  },
+  {
+   "phase": "03 Cloud / Container / Kubernetes",
+   "total": 7,
+   "done": 0,
+   "est": 285,
+   "min": 0
+  },
+  {
+   "phase": "04 Blue Team / Detection / SIEM",
+   "total": 4,
+   "done": 0,
+   "est": 260,
+   "min": 0
+  },
+  {
+   "phase": "05 Red Team / Purple Team",
+   "total": 4,
+   "done": 0,
+   "est": 305,
+   "min": 0
+  },
+  {
+   "phase": "06 Vulnerability Research / Fuzzing",
+   "total": 3,
+   "done": 0,
+   "est": 225,
+   "min": 0
+  },
+  {
+   "phase": "07 AI / Identity / Runtime Security",
+   "total": 4,
+   "done": 0,
+   "est": 245,
+   "min": 0
+  },
+  {
+   "phase": "08 Embedded / Hardware",
+   "total": 4,
+   "done": 0,
+   "est": 220,
+   "min": 0
+  },
+  {
+   "phase": "09 Side Channel",
+   "total": 2,
+   "done": 0,
+   "est": 185,
+   "min": 0
+  },
+  {
+   "phase": "10 Air-Gap / Covert Channel / Info Theory",
+   "total": 2,
+   "done": 0,
+   "est": 170,
+   "min": 0
+  },
+  {
+   "phase": "11 Independent Research",
+   "total": 2,
+   "done": 0,
+   "est": 330,
+   "min": 0
+  },
+  {
+   "phase": "12 Integration Project",
+   "total": 2,
+   "done": 0,
+   "est": 330,
+   "min": 0
+  },
+  {
+   "phase": "13 지평선 너머로 — 등급경계 유출통제 연구",
+   "total": 10,
+   "done": 0,
+   "est": 385,
+   "min": 0
+  }
+ ],
+ "tasks": [],
+ "tasks_open": 0,
+ "streak": 0,
+ "today_score": 0,
+ "month_days_ok": 0,
+ "study_week_min": 0,
+ "apps": {}
+}

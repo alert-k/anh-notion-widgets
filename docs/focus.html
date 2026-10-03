@@ -1,0 +1,14 @@
+<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>ANH Focus</title>
+<link rel=stylesheet href=w.css><body><div class=c style="text-align:center"><div class=m id=clk></div><div class=big style="font-size:48px" id=tm>25:00</div>
+<div class=m id=md>Focus</div><p><button onclick=tog()>시작/정지 <kbd>space</kbd></button> <button onclick=rst()>리셋 <kbd>r</kbd></button></p>
+<div class=m>오늘 완료 🍅 <b id=cnt>0</b></div></div><script src=w.js></script><script>
+const day=new Date().toDateString();let s,focus=true,run=null,left=25*60;
+try{const o=JSON.parse(localStorage.pomo||"{}");cnt.textContent=o.day==day?o.n:0}catch(e){}
+const fmt=x=>String(Math.floor(x/60)).padStart(2,"0")+":"+String(x%60).padStart(2,"0");
+function show(){tm.textContent=fmt(left);md.textContent=focus?"Focus 25":"Break 5"}
+function tick(){left--;if(left<0){if(focus){const n=+cnt.textContent+1;cnt.textContent=n;try{localStorage.pomo=JSON.stringify({day,n})}catch(e){}}
+focus=!focus;left=(focus?25:5)*60;try{new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=").play()}catch(e){}}show()}
+function tog(){if(run){clearInterval(run);run=null}else run=setInterval(tick,1000)}
+function rst(){clearInterval(run);run=null;focus=true;left=25*60;show()}
+addEventListener("keydown",e=>{if(e.code=="Space"){e.preventDefault();tog()}if(e.key=="r")rst()});
+setInterval(()=>clk.textContent=new Date().toLocaleTimeString("ko-KR"),1000);show()</script>

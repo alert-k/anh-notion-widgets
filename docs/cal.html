@@ -1,0 +1,16 @@
+<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>ANH Calendar</title>
+<link rel=stylesheet href=w.css><style>table{width:100%;border-collapse:collapse;text-align:center}td{padding:5px 0;position:relative;cursor:default}
+td.t{color:var(--ac);font-weight:700}td i{position:absolute;left:50%;bottom:0;width:4px;height:4px;border-radius:2px;background:#e5484d;margin-left:-2px}
+textarea{width:100%;height:70px;background:#fff6a8;color:#333;border:0;border-radius:8px;padding:8px;resize:vertical}</style>
+<body><div class=c><b id=ym></b> <button onclick=mv(-1)>◀</button><button onclick=mv(1)>▶</button><table id=tb></table></div>
+<h4>다가오는 Task</h4><div id=up class=m></div><h4>📌 스티커 메모 <span class=m>(이 기기 저장)</span></h4>
+<textarea id=memo placeholder="메모…"></textarea><script src=w.js></script><script>
+let D={tasks:[]},cur=new Date();cur.setDate(1);
+const k=x=>x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0");
+function draw(){const y=cur.getFullYear(),m=cur.getMonth(),due=new Set(D.tasks.map(t=>t.due.slice(0,10)));ym.textContent=y+"."+(m+1);
+let h="<tr>"+"일월화수목금토".split("").map(s=>`<td class=m>${s}</td>`).join("")+"</tr><tr>";const f=new Date(y,m,1).getDay(),n=new Date(y,m+1,0).getDate();
+for(let i=0;i<f;i++)h+="<td></td>";for(let d=1;d<=n;d++){const s=k(new Date(y,m,d));if((f+d-1)%7==0&&d>1)h+="</tr><tr>";h+=`<td class="${s==(D.today||k(new Date()))?"t":""}">${d}${due.has(s)?"<i></i>":""}</td>`}tb.innerHTML=h+"</tr>"}
+const mv=n=>{cur.setMonth(cur.getMonth()+n);draw()};
+try{memo.value=localStorage.memo||"";memo.oninput=()=>localStorage.memo=memo.value}catch(e){}
+load().then(d=>{D=d;const t=d.today;up.innerHTML=d.tasks.filter(x=>x.due.slice(0,10)>=t).sort((a,b)=>a.due<b.due?-1:1).slice(0,8)
+.map(x=>`${x.due.slice(5,10)} · ${x.t} <span class=m>${x.area||""}</span>`).join("<br>")||"없음";draw()}).catch(draw)</script>

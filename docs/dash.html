@@ -1,0 +1,12 @@
+<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>ANH Dash</title>
+<link rel=stylesheet href=w.css><body><div id=r class=m>loading…</div><script src=w.js></script><script>
+load().then(d=>{const t=d.roadmap.reduce((a,p)=>(a.n+=p.total,a.d+=p.done,a.e+=p.est,a.m+=p.min,a),{n:0,d:0,e:0,m:0});
+r.className="";r.innerHTML=`<div class=g>
+<div class=c><div class=big>🔥${d.streak}</div><div class=m>루틴 연속(일)</div></div>
+<div class=c><div class=big>${d.today_score}%</div><div class=m>오늘 루틴</div></div>
+<div class=c><div class=big>${(d.study_week_min/60).toFixed(1)}h</div><div class=m>7일 공부</div></div>
+<div class=c><div class=big>${d.tasks_open}</div><div class=m>열린 Task</div></div></div>
+<h4>🛡️ TOSS 로드맵 ${pct(t.d,t.n)}% <span class=m>(${t.d}/${t.n} · ${(t.m/60).toFixed(0)}/${t.e}h)</span></h4>
+${d.roadmap.map(p=>`<div class=m>${p.phase} ${p.done}/${p.total}</div><div class=bar><i style="width:${pct(p.done,p.total)}%"></i></div>`).join("")}
+<div class=m>📮 지원: ${Object.entries(d.apps).map(([k,v])=>k+" "+v).join(" · ")||"-"}</div>
+<p><a href=https://horyz.io/ target=_blank>horyz.io <kbd>h</kbd></a><a href=https://lab.horyz.io/ target=_blank>lab <kbd>l</kbd></a><span class=m>sync ${d.updated}</span></p>`}).catch(e=>r.textContent="data.json 없음: "+e)</script>
