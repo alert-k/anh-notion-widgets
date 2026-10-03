@@ -129,20 +129,20 @@ pct_t = round(dn / tot * 100) if tot else 0
 NL = "\n"
 toss_mid = (f"진행 중: {', '.join(doing)}" if doing else "아직 시작 전 — 첫 유닛: " + (title_of(todo[0]) if todo else "-"))
 R = {
-    "daily": f"📅 {today}{NL}루틴 {bar(out['today_score'])} {out['today_score']}% · 🔥 연속 {streak}일{NL}"
+    "daily": f"{today}{NL}루틴 {bar(out['today_score'])} {out['today_score']}% · 🔥 연속 {streak}일{NL}"
              f"공부(7일) {out['study_week_min'] / 60:.1f}h · 오늘 커밋 {n}{NL}열린 Task {len(tasks)}개",
-    "pins": "📌 고정 메모" + NL + (NL.join("• " + x for x in pins) or "없음 — Inbox에서 Pin 체크"),
-    "toss": f"🗺️ TOSS 여정 {'⭐' * (pct_t // 25) or '☆'} {pct_t}% ({dn}/{tot}){NL}"
+    "pins": "고정 메모" + NL + (NL.join("• " + x for x in pins) or "없음 — Inbox에서 Pin 체크"),
+    "toss": f"TOSS 여정 {'⭐' * (pct_t // 25) or '☆'} {pct_t}% ({dn}/{tot}){NL}"
             f"학습 {mins / 60:.0f}h / 목록 합계 {est:.0f}h{NL}{toss_mid}{NL}일정·주간 시간은 lab.horyz.io 기준",
-    "lab": "🧪 lab.horyz.io" + NL
+    "lab": "lab.horyz.io" + NL
            + (f"챌린지 {lab['challenges']}개 · 카테고리 {lab['cats']} · 리더보드 {lab['board']}명" if "challenges" in lab else "(연결 실패)")
            + (f"{NL}진행도 연동됨" if lab.get("progress") else f"{NL}진행도 연동: LAB_TOKEN 시크릿 필요"),
-    "tasks": f"✅ 할 일 {len(tasks)}개{NL}" + NL.join(
+    "tasks": f"할 일 {len(tasks)}개{NL}" + NL.join(
         f"• {title_of(t)}" + (f"  ~{prop(t, 'Due')[5:]}" if prop(t, "Due") else "") + f"  {(prop(t, 'Quadrant') or '')[:2]}"
         for t in alltasks[:8]),
-    "apps": "📮 지원 현황" + NL + (" · ".join(f"{k} {v}" for k, v in Counter(prop(a, "Status") for a in apps_p).items()) or "-")
+    "apps": "지원 현황" + NL + (" · ".join(f"{k} {v}" for k, v in Counter(prop(a, "Status") for a in apps_p).items()) or "-")
             + (NL + "마감: " + ", ".join(f"{d[5:]} {t}" for d, t in dl) if dl else ""),
-    "wheel": "🎡 Life Wheel (낮은 순)" + NL + NL.join(
+    "wheel": "Life Wheel (낮은 순)" + NL + NL.join(
         f"{title_of(w)[:6]} {bar((prop(w, 'Score (1-10)') or 0) * 10)} {prop(w, 'Score (1-10)') or 0}" for w in wheel[:8]),
 }
 for k, text in R.items():
@@ -150,3 +150,39 @@ for k, text in R.items():
     if bid:
         api("PATCH", f"/blocks/{bid}", {"callout": {"rich_text": rt(text)}})
 print("home reports updated")
+
+
+# ---- 5. horyz.io posts auto-detect -> Site Posts (upsert by URL) ----
+import re
+SECTION_TYPE = {"research": "Research", "cve": "CVE", "bounty": "Bug Bounty"}
+
+
+def fetch_html(url):
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 anh-sync"})
+    return urllib.request.urlopen(req, timeout=30).read().decode("utf-8", "replace")
+
+
+try:
+    known = {prop(r, "URL"): r for r in query_all(I["posts"]) if prop(r, "URL")}
+    new = 0
+    for sec, typ in SECTION_TYPE.items():
+        slugs = sorted(set(re.findall(rf'href="/{sec}/([a-z0-9][a-z0-9_-]*)"', fetch_html(f"https://horyz.io/{sec}/"))))
+        for slug in slugs:
+            url = f"https://horyz.io/{sec}/{slug}"
+            html = fetch_html(url)
+            t = re.search(r"<title>(.*?)</title>", html, re.S)
+            title = re.sub(r"\s*[·|—-]\s*Alert_K.*$", "", t.group(1).strip()) if t else slug
+            d = re.search(r"(20\d\d-\d\d-\d\d)", html)
+            props = {"Title": {"title": rt(title)}, "Site": {"select": {"name": "horyz.io"}},
+                     "Type": {"select": {"name": typ}}, "Status": {"select": {"name": "발행"}}, "URL": {"url": url}}
+            if d:
+                props["Publish"] = {"date": {"start": d.group(1)}}
+            if url in known:  # already tracked: only promote to 발행, never overwrite manual edits
+                if prop(known[url], "Status") != "발행":
+                    api("PATCH", f"/pages/{known[url]['id']}", {"properties": {"Status": props["Status"]}})
+            else:
+                api("POST", "/pages", {"parent": {"database_id": I["posts"]}, "properties": props})
+                new += 1
+    print("posts: new", new)
+except Exception as e:  # never block sync on the public site
+    print("posts skipped:", e)

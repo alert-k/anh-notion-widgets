@@ -32,19 +32,19 @@ def dv(): return {"object": "block", "type": "divider", "divider": {}}
 hub = lambda k: lk("page_id", I[k])
 
 top = [
- co("🧙 재의 마녀의 여행 노트 — 오늘도 한 걸음. 별 브로치 ⭐는 TOSS 여정이 25% 진행될 때마다 하나씩 늘어나요.", "⭐", "gray_background"),
+ co("재의 마녀의 여행 노트 — 오늘도 한 걸음. 별 브로치 ⭐는 TOSS 여정이 25% 진행될 때마다 하나씩 늘어나요.", "⭐", "gray_background"),
  row(
-  col(hd("⚡ 퀵 링크"), hub("hub:act"), hub("hub:log"), hub("hub:sec"), hub("hub:study"), hub("hub:job"), hub("hub:pkm"), hub("hub:guide"), hub("sites"), hub("lore")),
-  col(co("loading…", "📅", "blue_background"), co("loading…", "📌", "yellow_background")),
-  col(co("loading…", "🗺️", "purple_background"), co("loading…", "🧪", "green_background"))),
- dv(),
- row(col(emb("dash.html")), col(emb("cal.html")), col(emb("focus.html"))),
- dv(),
+  col(emb("dash.html")),
+  col(co("loading…", "📅", "blue_background"), co("loading…", "📌", "yellow_background"))),
  row(
-  col(co("loading…", "✅", "red_background"), hub("hub:act")),
-  col(co("loading…", "📮", "orange_background"), hub("hub:job")),
-  col(co("loading…", "🎡", "pink_background"), hub("hub:log"))),
+  col(co("loading…", "🗺️", "purple_background"), co("loading…", "🧪", "green_background")),
+  col(co("loading…", "✅", "red_background"))),
+ row(
+  col(co("loading…", "📮", "orange_background"), co("loading…", "🎡", "pink_background")),
+  col(emb("cal.html"), emb("focus.html"))),
  dv(),
+ row(col(hd("⚡ 퀵 링크"), hub("hub:act"), hub("hub:log"), hub("hub:sec"), hub("hub:study")),
+     col(hd("　"), hub("hub:job"), hub("hub:pkm"), hub("hub:guide"), hub("sites"), hub("lore"))),
  row(col(bm("https://horyz.io/")), col(bm("https://lab.horyz.io/"))),
 ]
 res = api("PATCH", f"/blocks/{HOME}/children", {"children": top})
