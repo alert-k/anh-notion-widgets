@@ -307,3 +307,17 @@ print("tasks automation schema OK")
 relate("pkm", "Roadmap Unit", "roadmap", "정리 노트")
 relate("pkm", "Subject", "subjects", "정리 노트")
 print("knowledge links OK")
+
+# ================= 주간 시간표 =================
+addprop("tasks", {"예상(h)": N})
+db("schedule", hub["act"], "주간 시간표 (고정 일정 → 남는 시간에 공부 자동 배분)", "🗓️", {
+    "일정": T, "When": D, "Type": sel("학교", "알바", "약속", "기타"), "Repeat": sel("없음", "매주")})
+if "schedule:seeded" not in I:
+    from datetime import date, timedelta
+    d = date.today(); mon = d + timedelta(days=(7 - d.weekday()) % 7 or 7)
+    for name, a, b, typ in [("(예시) 학교", "12:00", "17:00", "학교"), ("(예시) 알바", "17:00", "23:00", "알바")]:
+        api("POST", "/pages", {"parent": {"database_id": I["schedule"]}, "properties": {
+            "일정": {"title": rt(name)}, "Type": {"select": {"name": typ}}, "Repeat": {"select": {"name": "없음"}},
+            "When": {"date": {"start": f"{mon}T{a}:00", "end": f"{mon}T{b}:00", "time_zone": "Asia/Seoul"}}}})
+    I["schedule:seeded"] = 1; save_ids(I)
+print("schedule OK")

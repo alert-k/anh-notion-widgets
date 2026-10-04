@@ -35,7 +35,7 @@ top = [
  co("재의 마녀의 여행 노트 — 오늘도 한 걸음. 별 브로치 ⭐는 TOSS 여정이 25% 진행될 때마다 하나씩 늘어나요.", "⭐", "gray_background"),
  row(
   col(emb("dash.html")),
-  col(co("loading…", "📅", "blue_background"), co("loading…", "📌", "yellow_background"))),
+  col(co("loading…", "🗓️", "default"), co("loading…", "📅", "blue_background"), co("loading…", "📌", "yellow_background"))),
  row(
   col(co("loading…", "🗺️", "purple_background"), co("loading…", "🧪", "green_background")),
   col(co("loading…", "✅", "red_background"))),
@@ -56,6 +56,6 @@ def walk(bid):
         elif b["type"] in ("column_list", "column"): walk(b["id"])
 for b in api("GET", f"/blocks/{HOME}/children?page_size=100")["results"]:
     if b["type"] == "column_list": walk(b["id"])
-names = ["daily", "pins", "toss", "lab", "tasks", "apps", "wheel"]
+names = ["sched", "daily", "pins", "toss", "lab", "tasks", "apps", "wheel"]
 for n, i in zip(names, ids_): I[f"home:{n}"] = i
 save_ids(I); print(len(ids_), "report callouts")
