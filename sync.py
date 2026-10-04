@@ -90,6 +90,8 @@ def lab_sync(rm_pages, journal_page_id):
              "완료일": {"date": {"start": want["완료일"]} if want["완료일"] else None},
              "달성 Depth": {"select": {"name": want["달성 Depth"]} if want["달성 Depth"] else None}}
         api("PATCH", f"/pages/{pg['id']}", {"properties": P})
+        if label == "완료" and have["Status"] != "완료":
+            make_note(pg)
         changed += 1
     # weekly plans: upsert by week
     have_w = {prop(w, "Week"): w for w in query_all(I["weekly"])}
@@ -105,7 +107,7 @@ def lab_sync(rm_pages, journal_page_id):
     names = {prop(p_, "Unit ID"): title_of(p_) for p_ in rm_pages}
     done_today = [names.get(u, u) for u, d in day0.items() if d == today and status.get(u) == "done"]
     api("PATCH", f"/pages/{journal_page_id}", {"properties": {
-        "Lab 완료": {"rich_text": rt(", ".join(done_today))}, "공부": {"checkbox": bool(done_today)}}})
+        "Lab 완료": {"rich_text": rt(", ".join(done_today))}, **({"공부": {"checkbox": True}} if done_today else {})}})
     print("lab sync: units changed", changed, "| done today", len(done_today))
     return changed
 
@@ -159,6 +161,66 @@ def gen_today_tasks(rm_pages):
             make(name, prop(r, "Area") or "생활", "루틴")
 
 
+# ---- 2d. study auto-fields, knowledge stubs, weekly/monthly reviews ----
+def study_auto():
+    """Journal(today).공부(h) = sum of today's Study Sessions; 공부 checkbox turns on (never forced off)."""
+    mins = sum(prop(s, "Minutes") or 0 for s in query_all(I["sessions"], {"property": "Date", "date": {"equals": today}}))
+    P = {"공부(h)": {"number": round(mins / 60, 1)}}
+    if mins:
+        P["공부"] = {"checkbox": True}
+    api("PATCH", f"/pages/{dj[0]['id']}", {"properties": P})
+
+
+def make_note(unit_page):
+    """Unit finished on lab -> Knowledge stub linked to that unit (once)."""
+    title = "정리 — " + title_of(unit_page)
+    if query_all(I["pkm"], {"property": "Note", "title": {"equals": title}}):
+        return
+    H = lambda t: {"object": "block", "type": "heading_3", "heading_3": {"rich_text": rt(t)}}
+    Pp = lambda: {"object": "block", "type": "paragraph", "paragraph": {"rich_text": []}}
+    api("POST", "/pages", {"parent": {"database_id": I["pkm"]}, "properties": {
+        "Note": {"title": rt(title)}, "PARA": {"select": {"name": "Resources"}},
+        "Roadmap Unit": {"relation": [{"id": unit_page["id"]}]}},
+        "children": [H("핵심 원리 (내 말로)"), Pp(), H("직접 해본 것 · 증거"), Pp(), H("헷갈렸던 점"), Pp(), H("복습 질문")]
+        + [Pp()]})
+
+
+def period_review(kind, title, a, b):
+    """Weekly/Monthly Journal page with computed stats; created once per period."""
+    if query_all(I["journal"], {"and": [{"property": "Type", "select": {"equals": kind}},
+                                        {"property": "Title", "title": {"equals": title}}]}):
+        return
+    rg = lambda p: {"and": [{"property": p, "date": {"on_or_after": a}}, {"property": p, "date": {"on_or_before": b}}]}
+    days = query_all(I["journal"], {"and": [{"property": "Type", "select": {"equals": "Daily"}}, rg("Date")]})
+    sc = [prop(d, "루틴 점수(%)") or 0 for d in days]
+    study_h = round(sum(prop(d, "공부(h)") or 0 for d in days), 1)
+    commits = int(sum(prop(d, "GitHub 커밋") or 0 for d in days))
+    tks = query_all(I["tasks"], rg("Due"))
+    done = sum(1 for t in tks if t["properties"]["Done"]["checkbox"])
+    units = sum(1 for r in rm if (prop(r, "완료일") or "") and a <= prop(r, "완료일") <= b)
+    line = (f"{a} ~ {b} · 기록 {len(days)}일 · 루틴 평균 {round(sum(sc) / len(sc)) if sc else 0}% · 공부 {study_h}h · "
+            f"커밋 {commits} · Task {done}/{len(tks)} 완료 · 로드맵 유닛 {units}개 완료")
+    H = lambda t: {"object": "block", "type": "heading_3", "heading_3": {"rich_text": rt(t)}}
+    Pp = lambda: {"object": "block", "type": "paragraph", "paragraph": {"rich_text": []}}
+    api("POST", "/pages", {"parent": {"database_id": I["journal"]}, "properties": {
+        "Title": {"title": rt(title)}, "Type": {"select": {"name": kind}},
+        "Date": {"date": {"start": a, "end": b}}, "공부(h)": {"number": study_h}, "GitHub 커밋": {"number": commits},
+        "Highlight": {"rich_text": rt(line)}},
+        "children": [{"object": "block", "type": "callout", "callout": {"rich_text": rt(line), "icon": {"type": "emoji", "emoji": "📊"}}},
+                     H("Keep — 계속할 것"), Pp(), H("Problem — 문제였던 것"), Pp(), H("Try — 다음에 시도할 것"), Pp()]})
+    print("review created:", title)
+
+
+def periodic_journals():
+    d = now.date()
+    if d.weekday() == 0:  # Monday -> review last week
+        a, b = d - timedelta(days=7), d - timedelta(days=1)
+        period_review("Weekly", a.strftime("%G-W%V") + " Weekly", a.isoformat(), b.isoformat())
+    if d.day == 1:  # 1st -> review last month
+        b = d - timedelta(days=1)
+        period_review("Monthly", b.strftime("%Y-%m") + " Monthly", b.replace(day=1).isoformat(), b.isoformat())
+
+
 # ---- 3. data.json ----
 out = {"updated": now.isoformat(timespec="minutes"), "today": today}
 
@@ -166,6 +228,8 @@ rm = query_all(I["roadmap"])
 if lab_sync(rm, dj[0]["id"]):
     rm = query_all(I["roadmap"])
 gen_today_tasks(rm)
+study_auto()
+periodic_journals()
 try:  # keep time-horizon view filters (오늘/이번 주/이번 달/올해, 로드맵 '지금') current
     from vlib import refresh
     opens = [prop(r, "#") for r in rm if prop(r, "Status") not in ("완료", "건너뜀") and prop(r, "#")]

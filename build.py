@@ -302,3 +302,8 @@ if "routines:seeded" not in I:
             "Notes": {"rich_text": rt(note)}}})
     I["routines:seeded"] = 1; save_ids(I)
 print("tasks automation schema OK")
+
+# ================= 학습·저장 자동화 스키마 =================
+relate("pkm", "Roadmap Unit", "roadmap", "정리 노트")
+relate("pkm", "Subject", "subjects", "정리 노트")
+print("knowledge links OK")
