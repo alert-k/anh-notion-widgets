@@ -1,37 +1,36 @@
-/* Wandering-witch travel journal: parchment + ink, sapphire & blush accents. Tokens on :root, dark via prefers-color-scheme. */
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Noto+Sans+KR:wght@400;500;700&display=swap");
+/* Matches horyz.io: near-black, cream ink, hairlines, 3px corners, mono eyebrows, green/amber accents. */
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
 :root{
-  --bg:#f7f1e6; --surface:#fffaf0; --ink:#2b2328; --mut:#6f5d61; --line:#e6d9c6;
-  --sap:#3550b8; --sap-soft:#dfe5fb; --blush:#e9c8bd; --sky:#7fcfd6; --gold:#c8923a;
-  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px;
-  --r1:10px; --r2:18px; --shadow:0 1px 0 #fff8 inset,0 6px 18px -8px #4a3a2a33;
-  --serif:"Fraunces","Noto Serif KR",Georgia,serif; --sans:"Noto Sans KR",system-ui,"Malgun Gothic",sans-serif;
+  --bg:#050505; --tile:#0a0a0a; --ink:#f2f0ea; --dim:#c4c4bd; --mut:#9a9a92; --faint:#6f6f68;
+  --line:rgba(242,240,234,.10); --line-hover:rgba(242,240,234,.32); --track:#1b1b19;
+  --ac:#7fd38e; --ac-ink:#7fd38e; --amber:#d9a94e; --warn:#e5736b;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --r:3px;
+  --display:"Space Grotesk","Noto Sans KR",sans-serif; --body:"Manrope","Noto Sans KR",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
 }
-@media (prefers-color-scheme:dark){:root{
-  --bg:#17141f; --surface:#211d2e; --ink:#f1e9df; --mut:#b9a7a3; --line:#342e47;
-  --sap:#9db1ff; --sap-soft:#2b3358; --blush:#e0a99d; --sky:#7fcfd6; --gold:#e3b565;
-  --shadow:0 1px 0 #ffffff0d inset,0 8px 22px -10px #000a;}}
 *{box-sizing:border-box}
-html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--sans);padding:var(--s3);font-variant-numeric:lining-nums tabular-nums}
-.wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);box-shadow:var(--shadow);padding:var(--s4) var(--s5);position:relative;overflow:hidden}
-.wrap::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--blush),var(--sky),var(--sap))}
-h1,h2{font-family:var(--serif);font-weight:600;margin:0;letter-spacing:.01em}
-h2{font-size:20px;line-height:1.2}
-.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:500}
-.mut{color:var(--mut);font-size:13px}
-.num{font-family:var(--serif);font-weight:700;font-variant-numeric:lining-nums tabular-nums}
-.rule{border:0;border-top:1px solid var(--line);margin:var(--s4) 0}
-.row{display:flex;align-items:center;gap:var(--s4)}
-.grow{flex:1;min-width:0}
-a{color:var(--sap);text-decoration:none;font-weight:500}
-a:hover{text-decoration:underline}
-a:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid var(--sap);outline-offset:2px;border-radius:6px}
-button{font:inherit;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:999px;padding:var(--s2) var(--s4);min-height:36px;cursor:pointer;transition:background .15s,border-color .15s}
-button:hover{background:var(--sap-soft);border-color:var(--sap)}
-button.primary kbd{color:inherit;border-color:#fff7}
-button.primary{background:var(--sap);color:var(--surface);border-color:var(--sap);font-weight:700}
-kbd{font:500 11px var(--sans);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;color:var(--mut)}
+html,body{margin:0;background:var(--bg);color-scheme:dark}
+body{color:var(--ink);font:400 14px/1.5 var(--body);padding:10px;font-variant-numeric:tabular-nums}
+.bento{display:grid;gap:var(--s2)}
+.tile{background:var(--tile);border:1px solid var(--line);border-radius:var(--r);padding:var(--s4) 18px;min-width:0;transition:border-color .15s}
+.tile:hover{border-color:var(--line-hover)}
+.lbl{display:flex;align-items:center;gap:8px;font:500 10.5px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--mut)}
+.lbl .ic{width:14px;height:14px;color:var(--ac)}
+.big{font:500 44px/1 var(--display);letter-spacing:-.03em;margin-top:var(--s3)}
+.big small{font:500 14px var(--mono);color:var(--mut);margin-left:4px;letter-spacing:0}
+.mut{color:var(--mut);font-size:12.5px}
+.mono{font-family:var(--mono)}
+.bar{height:4px;border-radius:1px;background:var(--track);overflow:hidden;margin-top:var(--s3)}
+.bar>i{display:block;height:100%;background:var(--ac)}
+.chips{display:flex;gap:var(--s2);flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:2px;padding:6px 12px;font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;text-decoration:none;min-height:32px;transition:border-color .15s,color .15s}
+.chip:hover{border-color:var(--ac);color:var(--ac)}
+a:focus-visible,button:focus-visible,textarea:focus-visible{outline:1.5px solid var(--ac);outline-offset:2px}
+button{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:2px;padding:8px 14px;min-height:36px;cursor:pointer;transition:border-color .15s,color .15s}
+button:hover{border-color:var(--ac);color:var(--ac)}
+button.primary{background:var(--ac);border-color:var(--ac);color:#04140a;font-weight:600}
+button.primary:hover{color:#04140a;filter:brightness(1.08)}
+kbd{font:500 9.5px var(--mono);border:1px solid var(--line);border-radius:2px;padding:0 5px;color:var(--mut);background:transparent;letter-spacing:.04em}
+button.primary kbd{color:#04140acc;border-color:#04140a44}
 svg{display:block}
-.ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.ic{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}

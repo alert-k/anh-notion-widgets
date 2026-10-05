@@ -2,46 +2,44 @@
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ANH Calendar</title><link rel="stylesheet" href="w.css">
 <style>
-:root{--q1:#c8465b;--q2:var(--sap);--q3:var(--gold);--q4:var(--mut);--note:#fdf0b8;--note-ink:#3a3320}
-@media (prefers-color-scheme:dark){:root{--q1:#ff8a9a}}
+.bento{grid-template-columns:1.25fr 1fr}
 .head{display:flex;align-items:center;justify-content:space-between;gap:var(--s3)}
-.head div{display:flex;gap:var(--s2)}
-.head button{width:36px;padding:0;display:grid;place-items:center}
-table{width:100%;border-collapse:separate;border-spacing:0 2px;table-layout:fixed;margin-top:var(--s3)}
-th{font:500 12px var(--sans);color:var(--mut);padding-bottom:var(--s1)}
-td{height:38px;text-align:center;vertical-align:top;font-variant-numeric:tabular-nums;padding-top:6px}
-td span{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%}
-td.t span{background:var(--sap);color:var(--surface);font-weight:700}
-td.o{color:var(--mut);opacity:.45}
-td .d{display:flex;justify-content:center;gap:2px;margin-top:2px;height:5px}
-td .d i{width:5px;height:5px;border-radius:50%}
-.up{list-style:none;margin:var(--s2) 0 0;padding:0;display:grid;gap:var(--s2)}
-.up li{display:flex;align-items:center;gap:var(--s3);padding:var(--s2) var(--s3);border:1px solid var(--line);border-radius:var(--r1)}
-.up b{font:700 13px var(--serif);min-width:44px;color:var(--mut)} .up i{width:8px;height:8px;border-radius:50%;flex:none}
-.up .grow{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.note{margin-top:var(--s2);background:var(--note);border-radius:var(--r1);padding:var(--s3);box-shadow:0 6px 12px -8px #0006;transform:rotate(-.4deg)}
-.note textarea{width:100%;min-height:72px;border:0;background:transparent;resize:vertical;font:500 14px/1.5 var(--sans);color:var(--note-ink)}
-.note textarea::placeholder{color:#8a7b4e}
-.sw{display:flex;gap:var(--s2);margin-top:var(--s1)} .sw button{width:22px;height:22px;min-height:0;padding:0;border-radius:50%;border:2px solid #0003}
+.head h2{margin:0;font:500 22px var(--display);letter-spacing:-.02em}
+.head div{display:flex;gap:var(--s2)} .head button{width:34px;padding:0;display:grid;place-items:center;font-size:16px}
+table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;margin-top:var(--s3)}
+th{font:500 10px var(--mono);letter-spacing:.2em;color:var(--faint);padding:0 0 var(--s2);text-align:center}
+td{height:40px;text-align:center;vertical-align:top;padding-top:5px;border-top:1px solid var(--line)}
+td span{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:2px;font-size:13px}
+td.t span{background:var(--ac);color:#04140a;font-weight:700}
+td .d{display:flex;justify-content:center;gap:3px;margin-top:3px;height:4px}
+td .d i{width:4px;height:4px;border-radius:50%}
+.up{list-style:none;margin:var(--s3) 0 0;padding:0}
+.up li{display:flex;align-items:center;gap:var(--s3);padding:10px 0;border-top:1px solid var(--line)}
+.up li:first-child{border-top:0;padding-top:0}
+.up b{font:500 11px var(--mono);color:var(--mut);min-width:40px} .up i{width:6px;height:6px;border-radius:50%;flex:none}
+.up span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+textarea{width:100%;min-height:96px;margin-top:var(--s3);background:transparent;border:1px solid var(--line);border-radius:var(--r);padding:var(--s3);resize:vertical;font:400 13.5px/1.55 var(--body);color:var(--ink)}
+textarea::placeholder{color:var(--faint)} textarea:focus{border-color:var(--ac);outline:0}
+.side{display:grid;gap:var(--s2);align-content:start}
+@media (max-width:520px){.bento{grid-template-columns:1fr}}
 </style></head>
-<body><main class="wrap">
-<div class="head"><div><span class="eyebrow">캘린더</span></div><h2 id="ym"></h2>
+<body><main class="bento">
+<section class="tile"><div class="head"><div><span class="lbl">Calendar</span></div><h2 id="ym"></h2>
   <div><button onclick="mv(-1)" aria-label="이전 달">‹</button><button onclick="mv(1)" aria-label="다음 달">›</button></div></div>
-<table id="tb" aria-label="월간 캘린더"></table>
-<hr class="rule"><div class="eyebrow">다가오는 Task</div><ul class="up" id="up"><li class="mut">불러오는 중…</li></ul>
-<hr class="rule"><div class="eyebrow">스티커 메모 <span class="mut">(이 기기에 저장)</span></div>
-<div class="note" id="nt"><textarea id="memo" aria-label="메모" placeholder="오늘의 한 줄…"></textarea>
-  <div class="sw" id="sw"></div></div>
-</main>
+<table id="tb" aria-label="월간 캘린더"></table></section>
+<div class="side">
+  <section class="tile"><div class="lbl">Upcoming</div><ul class="up" id="up"><li class="mut">불러오는 중…</li></ul></section>
+  <section class="tile"><div class="lbl">Memo <span style="color:var(--faint)">· this device</span></div><textarea id="memo" aria-label="메모" placeholder="한 줄 메모…"></textarea></section>
+</div></main>
 <script src="w.js"></script>
 <script>
 let D = { tasks: [], today: iso(new Date()) }, cur = new Date(); cur.setDate(1);
-const QC = q => (q || "").startsWith("Q1") ? "var(--q1)" : (q || "").startsWith("Q2") ? "var(--q2)" : (q || "").startsWith("Q3") ? "var(--q3)" : "var(--q4)";
+const QC = q => (q || "").startsWith("Q1") ? "var(--warn)" : (q || "").startsWith("Q2") ? "var(--ac)" : (q || "").startsWith("Q3") ? "var(--amber)" : "var(--faint)";
 function draw() {
   const y = cur.getFullYear(), m = cur.getMonth(), by = {};
   D.tasks.forEach(t => (by[t.due.slice(0, 10)] ||= []).push(t));
-  ym.textContent = `${y}년 ${m + 1}월`;
-  let h = "<tr>" + [..."일월화수목금토"].map(s => `<th scope="col">${s}</th>`).join("") + "</tr><tr>";
+  ym.textContent = `${y}.${String(m + 1).padStart(2, "0")}`;
+  let h = "<tr>" + ["S", "M", "T", "W", "T", "F", "S"].map(s => `<th scope="col">${s}</th>`).join("") + "</tr><tr>";
   const f = new Date(y, m, 1).getDay(), n = new Date(y, m + 1, 0).getDate();
   for (let i = 0; i < f; i++) h += "<td></td>";
   for (let d = 1; d <= n; d++) {
@@ -52,17 +50,11 @@ function draw() {
   tb.innerHTML = h + "</tr>";
 }
 const mv = n => { cur.setMonth(cur.getMonth() + n); draw(); };
-const COL = ["#fdf0b8", "#fcd9d4", "#d6ecf3", "#dfe5fb"];
-try {
-  memo.value = localStorage.memo || ""; memo.oninput = () => localStorage.memo = memo.value;
-  nt.style.setProperty("--note", localStorage.noteColor || COL[0]);
-} catch (e) {}
-sw.innerHTML = COL.map(c => `<button style="background:${c}" aria-label="메모 색 ${c}"></button>`).join("");
-sw.querySelectorAll("button").forEach((b, i) => b.onclick = () => { nt.style.setProperty("--note", COL[i]); try { localStorage.noteColor = COL[i]; } catch (e) {} });
+try { memo.value = localStorage.memo || ""; memo.oninput = () => localStorage.memo = memo.value; } catch (e) {}
 load().then(d => {
   D = d; const t = d.today;
   const items = d.tasks.filter(x => x.due.slice(0, 10) >= t).sort((a, b) => a.due < b.due ? -1 : 1).slice(0, 5);
-  up.innerHTML = items.map(x => `<li><b>${x.due.slice(5, 10).replace("-", "/")}</b><i style="background:${QC(x.q)}"></i><span class="grow">${x.t}</span></li>`).join("") || '<li class="mut">예정된 Task가 없어요</li>';
+  up.innerHTML = items.map(x => `<li><b>${x.due.slice(5, 10).replace("-", "/")}</b><i style="background:${QC(x.q)}"></i><span>${x.t}</span></li>`).join("") || '<li class="mut">예정된 Task 없음</li>';
   draw();
 }).catch(() => { up.innerHTML = '<li class="mut">데이터를 불러오지 못했어요</li>'; draw(); });
 </script></body></html>

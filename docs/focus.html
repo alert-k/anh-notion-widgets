@@ -2,37 +2,38 @@
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ANH Focus</title><link rel="stylesheet" href="w.css">
 <style>
-.wrap{text-align:center}
-.dial{width:196px;height:196px;margin:var(--s3) auto var(--s2);position:relative}
+.tile{text-align:center;padding:var(--s4) 18px var(--s5)}
+.top{display:flex;justify-content:space-between;align-items:center}
+.dial{width:188px;height:188px;margin:var(--s4) auto var(--s3);position:relative}
 .dial svg{width:100%;height:100%;transform:rotate(-90deg)}
-.dial circle{fill:none;stroke-width:8;stroke-linecap:round}
-.dial .tr{stroke:var(--line)} .dial .pg{stroke:var(--sap);transition:stroke-dashoffset 1s linear}
-.dial.brk .pg{stroke:var(--sky)}
-.dial .mid{position:absolute;inset:0;display:grid;place-content:center}
-.dial .mid b{font:700 46px/1 var(--serif);letter-spacing:.02em}
-.dots{display:flex;justify-content:center;gap:var(--s2);margin:var(--s2) 0 var(--s4)}
-.dots i{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--sap)} .dots i.on{background:var(--sap)}
-.btns{display:flex;justify-content:center;gap:var(--s3)}
+.dial circle{fill:none;stroke-width:3}
+.dial .tr{stroke:var(--track)} .dial .pg{stroke:var(--ac);transition:stroke-dashoffset 1s linear}
+.dial.brk .pg{stroke:var(--amber)}
+.mid{position:absolute;inset:0;display:grid;place-content:center;gap:6px}
+.mid b{font:500 44px/1 var(--display);letter-spacing:-.03em}
+.dots{display:flex;justify-content:center;gap:var(--s2);margin:0 0 var(--s4)}
+.dots i{width:18px;height:3px;background:var(--track)} .dots i.on{background:var(--ac)}
+.btns{display:flex;justify-content:center;gap:var(--s2)}
 </style></head>
-<body><main class="wrap">
-<div class="eyebrow" id="clk"></div>
-<div class="dial" id="dial"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="tr" cx="50" cy="50" r="45"/><circle class="pg" id="pg" cx="50" cy="50" r="45"/></svg>
-  <div class="mid"><b id="tm" role="timer" aria-live="off">25:00</b><span class="mut" id="md">집중</span></div></div>
+<body><main class="tile">
+<div class="top"><span class="lbl">Focus</span><span class="lbl" id="clk"></span></div>
+<div class="dial" id="dial"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="tr" cx="50" cy="50" r="46"/><circle class="pg" id="pg" cx="50" cy="50" r="46"/></svg>
+  <div class="mid"><b id="tm" role="timer" aria-live="off">25:00</b><span class="lbl" style="justify-content:center" id="md">Focus 25</span></div></div>
 <div class="dots" id="dots" role="img" aria-label="사이클 진행"></div>
-<div class="btns"><button class="primary" id="go" onclick="tog()">시작 <kbd>space</kbd></button><button onclick="rst()">리셋 <kbd>r</kbd></button></div>
-<p class="mut" style="margin:var(--s4) 0 0">오늘 완료한 집중 <b id="cnt" class="num">0</b>회</p>
+<div class="btns"><button class="primary" id="go" onclick="tog()">Start <kbd>space</kbd></button><button onclick="rst()">Reset <kbd>r</kbd></button></div>
+<p class="mut" style="margin:var(--s4) 0 0">오늘 완료 <b id="cnt" class="mono" style="color:var(--ink)">0</b> 세션</p>
 </main>
 <script src="w.js"></script>
 <script>
-const day = new Date().toDateString(), C = 2 * Math.PI * 45; pg.style.strokeDasharray = C;
+const day = new Date().toDateString(), C = 2 * Math.PI * 46; pg.style.strokeDasharray = C;
 let focus = true, run = null, total = 25 * 60, left = total, cycle = 0;
 try { const o = JSON.parse(localStorage.pomo || "{}"); cnt.textContent = o.day === day ? o.n : 0; } catch (e) {}
 const f2 = x => String(Math.floor(x / 60)).padStart(2, "0") + ":" + String(x % 60).padStart(2, "0");
 function show() {
-  tm.textContent = f2(Math.max(left, 0)); md.textContent = focus ? "집중 25분" : "휴식 5분";
+  tm.textContent = f2(Math.max(left, 0)); md.textContent = focus ? "Focus 25" : "Break 05";
   pg.style.strokeDashoffset = C * (1 - left / total); dial.classList.toggle("brk", !focus);
   dots.innerHTML = [0, 1, 2, 3].map(i => `<i class="${i < cycle % 4 ? "on" : ""}"></i>`).join("");
-  go.firstChild.nodeValue = run ? "정지 " : "시작 ";
+  go.firstChild.nodeValue = run ? "Pause " : "Start ";
   document.title = (run ? tm.textContent + " · " : "") + "ANH Focus";
 }
 function tick() {
@@ -46,6 +47,6 @@ function tick() {
 function tog() { if (run) { clearInterval(run); run = null; } else run = setInterval(tick, 1000); show(); }
 function rst() { clearInterval(run); run = null; focus = true; total = left = 25 * 60; show(); }
 addEventListener("keydown", e => { if (e.code === "Space" && e.target.tagName !== "BUTTON") { e.preventDefault(); tog(); } if (e.key === "r") rst(); });
-setInterval(() => clk.textContent = new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }), 1000);
+setInterval(() => clk.textContent = new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: false }), 1000);
 show();
 </script></body></html>
