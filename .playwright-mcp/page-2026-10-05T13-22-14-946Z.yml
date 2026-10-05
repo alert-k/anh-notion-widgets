@@ -1,9 +1,0 @@
-- main [ref=f2e2]:
-  - generic [ref=f2e7]:
-    - timer [ref=f2e8]: 25:00
-    - generic [ref=f2e9]: 집중 25분
-  - img "사이클 진행" [ref=f2e10]
-  - generic [ref=f2e15]:
-    - button "시작 space" [ref=f2e16] [cursor=pointer]
-    - button "리셋 r" [ref=f2e17] [cursor=pointer]
-  - paragraph [ref=f2e18]: 오늘 완료한 집중 0회
