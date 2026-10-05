@@ -1,0 +1,9 @@
+[Unit]
+Description=ANH Notion sync
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/anh-notion/deploy/anh-sync.sh
+TimeoutStartSec=240
