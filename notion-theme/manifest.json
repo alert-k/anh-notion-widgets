@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "ANH Notion Theme (horyz.io)",
+  "version": "1.0.0",
+  "description": "Restyles Notion's dark theme to match horyz.io: near-black, cream ink, hairlines, green accent, Space Grotesk / Manrope / JetBrains Mono. Runs only in your browser; no data is read or sent.",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.notion.so/*",
+        "https://app.notion.com/*",
+        "https://*.notion.site/*"
+      ],
+      "css": [
+        "theme.css"
+      ],
+      "run_at": "document_start"
+    }
+  ]
+}
