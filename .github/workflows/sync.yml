@@ -1,6 +1,6 @@
 name: sync-notion
 on:
-  schedule: [{cron: "*/30 * * * *"}]
+  schedule: [{cron: "*/10 * * * *"}]
   workflow_dispatch:
 permissions: {contents: write}
 concurrency: sync

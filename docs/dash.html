@@ -7,6 +7,6 @@ r.className="";r.innerHTML=`<div class=g>
 <div class=c><div class=big>${(d.study_week_min/60).toFixed(1)}h</div><div class=m>7일 공부</div></div>
 <div class=c><div class=big>${d.tasks_open}</div><div class=m>열린 Task</div></div></div>
 <h4>🛡️ TOSS 여정 ${'⭐'.repeat(Math.floor(pct(t.d,t.n)/25))||'☆'} ${pct(t.d,t.n)}% <span class=m>(${t.d}/${t.n} · ${(t.m/60).toFixed(0)}/${t.e}h)</span></h4>
-<div style="columns:2;column-gap:14px">${d.roadmap.map(p=>`<div class=m>${p.phase} ${p.done}/${p.total}</div><div class=bar><i style="width:${pct(p.done,p.total)}%"></i></div>`).join("")}</div>
+<div class=bar><i style="width:${pct(t.d,t.n)}%"></i></div>
 <div class=m>📮 지원: ${Object.entries(d.apps).map(([k,v])=>k+" "+v).join(" · ")||"-"}</div>
 <p><a href=https://horyz.io/ target=_blank>horyz.io <kbd>h</kbd></a><a href=https://lab.horyz.io/ target=_blank>lab <kbd>l</kbd></a><span class=m>sync ${d.updated}</span></p>`}).catch(e=>r.textContent="data.json 없음: "+e)</script>
