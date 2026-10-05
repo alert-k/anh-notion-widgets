@@ -3,7 +3,7 @@ Run locally or from GitHub Actions (env NOTION, optional GH_USER, DB ids from id
 import json, os, urllib.request, urllib.parse
 from datetime import datetime, timedelta, timezone
 from collections import Counter
-from lib import api, ids, query_all, rt, title_of, ROOT
+from lib import api, ids, query_all, rt, title_of, ROOT, secret
 
 if os.environ.get("IDS_JSON"):
     I = json.loads(os.environ["IDS_JSON"])
@@ -124,8 +124,8 @@ def allocate_today(rm_pages):
         if p_["id"] not in seen and status[p_["id"]] != "완료":
             seen.add(p_["id"]); cards.append(("오늘", p_, left_h(p_)))
 
-    autos = query_all(I["tasks"], {"and": [{"property": "Source", "select": {"equals": "lab 플랜"}},
-                                           {"property": "Due", "date": {"equals": today}}]})
+    from vlib import rng  # Notion filters compare in UTC: use explicit KST day range
+    autos = query_all(I["tasks"], {"and": [{"property": "Source", "select": {"equals": "lab 플랜"}}, rng("Due", today, today)]})
     spent = 0.0
     for t in autos:
         name = title_of(t)
@@ -179,7 +179,7 @@ ST = {"todo": "대기", "doing": "진행 중", "in_progress": "진행 중", "don
 
 def lab_sync(rm_pages, journal_page_id):
     global LAB_PLAN, LAB_OK
-    key = os.environ.get("LAB_SYNC_KEY")
+    key = secret("LAB_SYNC_KEY")
     if not key:
         return 0
     req = urllib.request.Request(f"https://lab.horyz.io/api/roadmap/export?hours={week_study_hours()}",

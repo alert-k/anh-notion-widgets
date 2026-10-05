@@ -18,6 +18,18 @@ def _token():
     sys.exit("NOTION token missing (env NOTION or .env)")
 
 
+def secret(name):
+    """env var, else .env file (local runs)."""
+    if os.environ.get(name):
+        return os.environ[name]
+    p = os.path.join(ROOT, ".env")
+    if os.path.exists(p):
+        for line in open(p, encoding="utf-8"):
+            if line.startswith(name + "="):
+                return line.split("=", 1)[1].strip().strip("\"'")
+    return None
+
+
 def api(method, path, body=None):
     req = urllib.request.Request(
         "https://api.notion.com/v1" + path,

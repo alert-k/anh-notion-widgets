@@ -15,13 +15,16 @@ def v(method, path, body=None):
 
 
 def rng(prop, a, b):
-    return {"and": [{"property": prop, "date": {"on_or_after": a}}, {"property": prop, "date": {"on_or_before": b}}]}
+    """Inclusive KST day range [a, b]. Notion compares in UTC, so use explicit +09:00 datetimes."""
+    nxt = (date.fromisoformat(b) + timedelta(days=1)).isoformat()
+    return {"and": [{"property": prop, "date": {"on_or_after": f"{a}T00:00:00+09:00"}},
+                    {"property": prop, "date": {"before": f"{nxt}T00:00:00+09:00"}}]}
 
 
 def horizons(today):
     d = date.fromisoformat(today)
     mon = d - timedelta(days=d.weekday())
-    return {"오늘": {"property": "Due", "date": {"equals": today}},
+    return {"오늘": rng("Due", today, today),
             "이번 주": rng("Due", mon.isoformat(), (mon + timedelta(days=6)).isoformat()),
             "이번 달": rng("Due", d.replace(day=1).isoformat(), d.replace(day=calendar.monthrange(d.year, d.month)[1]).isoformat()),
             "올해": rng("Due", f"{d.year}-01-01", f"{d.year}-12-31")}
