@@ -1,12 +1,65 @@
-<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>ANH Dash</title>
-<link rel=stylesheet href=w.css><body><div id=r class=m>loading…</div><script src=w.js></script><script>
-load().then(d=>{const t=d.roadmap.reduce((a,p)=>(a.n+=p.total,a.d+=p.done,a.e+=p.est,a.m+=p.min,a),{n:0,d:0,e:0,m:0});
-r.className="";r.innerHTML=`<div class=g>
-<div class=c><div class=big>🔥${d.streak}</div><div class=m>루틴 연속(일)</div></div>
-<div class=c><div class=big>${d.today_score}%</div><div class=m>오늘 루틴</div></div>
-<div class=c><div class=big>${(d.study_week_min/60).toFixed(1)}h</div><div class=m>7일 공부</div></div>
-<div class=c><div class=big>${d.tasks_open}</div><div class=m>열린 Task</div></div></div>
-<h4>🛡️ TOSS 여정 ${'⭐'.repeat(Math.floor(pct(t.d,t.n)/25))||'☆'} ${pct(t.d,t.n)}% <span class=m>(${t.d}/${t.n} · ${(t.m/60).toFixed(0)}/${t.e}h)</span></h4>
-<div class=bar><i style="width:${pct(t.d,t.n)}%"></i></div>
-<div class=m>📮 지원: ${Object.entries(d.apps).map(([k,v])=>k+" "+v).join(" · ")||"-"}</div>
-<p><a href=https://horyz.io/ target=_blank>horyz.io <kbd>h</kbd></a><a href=https://lab.horyz.io/ target=_blank>lab <kbd>l</kbd></a><span class=m>sync ${d.updated}</span></p>`}).catch(e=>r.textContent="data.json 없음: "+e)</script>
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ANH Dash</title><link rel="stylesheet" href="w.css">
+<style>
+.hero{display:flex;align-items:center;gap:var(--s5)}
+.ring{width:104px;height:104px;flex:none;position:relative}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:9;stroke-linecap:round}
+.ring .tr{stroke:var(--line)} .ring .pg{stroke:var(--sap);transition:stroke-dashoffset .8s ease}
+.ring .mid{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ring .mid b{font:700 28px/1 var(--serif)} .ring .mid span{font-size:11px;color:var(--mut)}
+.brooch{display:flex;gap:6px;margin:var(--s2) 0 var(--s1)}
+.brooch svg{width:22px;height:22px;stroke:var(--gold);stroke-width:1.5;fill:none}
+.brooch .on{fill:var(--gold)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+.stat{padding:0 var(--s4);border-left:1px solid var(--line)} .stat:first-child{padding-left:0;border-left:0}
+.stat .v{font:700 26px/1.1 var(--serif);display:flex;align-items:center;gap:6px}
+.stat .v .ic{color:var(--gold)}
+.heat{display:grid;grid-template-columns:repeat(14,1fr);gap:4px;margin-top:var(--s2)}
+.heat i{aspect-ratio:1;border-radius:4px;background:var(--line)}
+.heat i.l1{background:var(--blush)} .heat i.l2{background:var(--sky)} .heat i.l3{background:var(--sap)}
+.heat i.t{outline:2px solid var(--ink);outline-offset:1px}
+.bars{display:flex;align-items:flex-end;gap:6px;height:56px;margin-top:var(--s2)}
+.bars div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.bars i{width:100%;border-radius:5px 5px 2px 2px;background:var(--sap-soft);min-height:3px}
+.bars i.on{background:var(--sap)} .bars span{font-size:11px;color:var(--mut)}
+.two{display:grid;grid-template-columns:1.3fr 1fr;gap:var(--s5)}
+@media (max-width:420px){.two{grid-template-columns:1fr}.hero{gap:var(--s4)}.ring{width:84px;height:84px}.ring .mid b{font-size:22px}}
+footer{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--s2)}
+</style></head>
+<body><main class="wrap" id="r"><p class="mut">불러오는 중…</p></main>
+<script src="w.js"></script>
+<script>
+const DAY = "일월화수목금토";
+load().then(d => {
+  const t = d.roadmap.reduce((a, p) => (a.n += p.total, a.d += p.done, a.e += p.est, a.m += p.min, a), { n: 0, d: 0, e: 0, m: 0 });
+  const p = pct(t.d, t.n), C = 2 * Math.PI * 44, stars = Math.floor(p / 25);
+  const heat = d.routine_hist.map((x, i) => `<i class="${x.s == null || x.s === 0 ? "" : x.s >= 80 ? "l3" : x.s >= 50 ? "l2" : "l1"}${x.d === d.today ? " t" : ""}" title="${x.d} · ${x.s ?? "-"}%"></i>`).join("");
+  const mx = Math.max(60, ...d.study_days.map(x => x.m));
+  const bars = d.study_days.map(x => `<div title="${x.d} · ${x.m}분"><i class="${x.m ? "on" : ""}" style="height:${Math.max(3, x.m / mx * 40)}px"></i><span>${DAY[new Date(x.d + "T00:00").getDay()]}</span></div>`).join("");
+  const star = n => `<svg viewBox="0 0 24 24" class="${n < stars ? "on" : ""}" aria-hidden="true">${STAR}</svg>`;
+  r.innerHTML = `
+  <section class="hero" aria-label="TOSS 여정 진행도">
+    <div class="ring"><svg viewBox="0 0 100 100" role="img" aria-label="진행률 ${p}%"><circle class="tr" cx="50" cy="50" r="44"/><circle class="pg" cx="50" cy="50" r="44" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - p / 100)}"/></svg>
+      <div class="mid"><b>${p}%</b><span>${t.d}/${t.n}</span></div></div>
+    <div class="grow"><div class="eyebrow">TOSS 여정</div><h2>재의 마녀의 여행</h2>
+      <div class="brooch" role="img" aria-label="별 브로치 ${stars}/4">${[0, 1, 2, 3].map(star).join("")}</div>
+      <div class="mut">누적 ${(t.m / 60).toFixed(0)}h / 계획 ${t.e}h</div></div>
+  </section>
+  <hr class="rule">
+  <section class="stats" aria-label="오늘 요약">
+    <div class="stat"><div class="v">${ico("flame")}${d.streak}<span class="mut">일</span></div><div class="mut">루틴 연속</div></div>
+    <div class="stat"><div class="v">${d.today_score}<span class="mut">%</span></div><div class="mut">오늘 루틴</div></div>
+    <div class="stat"><div class="v">${(d.study_week_min / 60).toFixed(1)}<span class="mut">h</span></div><div class="mut">7일 공부</div></div>
+  </section>
+  <hr class="rule">
+  <section class="two">
+    <div><div class="eyebrow">루틴 · 28일</div><div class="heat" role="img" aria-label="최근 28일 루틴 달성">${heat}</div></div>
+    <div><div class="eyebrow">공부 · 7일</div><div class="bars" role="img" aria-label="최근 7일 공부 시간">${bars}</div></div>
+  </section>
+  <hr class="rule">
+  <footer><span class="mut">열린 Task ${d.tasks_open} · 지원 ${Object.entries(d.apps).map(([k, v]) => k + " " + v).join(" · ") || "-"}</span>
+    <span><a href="https://horyz.io/" target="_blank" rel="noopener">horyz.io <kbd>h</kbd></a> &nbsp; <a href="https://lab.horyz.io/" target="_blank" rel="noopener">lab <kbd>l</kbd></a></span></footer>`;
+}).catch(e => r.innerHTML = `<p class="mut">데이터를 불러오지 못했어요 (${e.message})</p>`);
+</script></body></html>

@@ -1,8 +1,37 @@
-:root{--bg:#f8f4ea;--fg:#2b2328;--mut:#856165;--card:#fffdf7;--ac:#4a6fd0;--bd:#e9c8bd}
-@media(prefers-color-scheme:dark){:root{--bg:#1d1a26;--fg:#f3ece4;--mut:#c9a9a3;--card:#272336;--ac:#8fd3d8;--bd:#3a3450}}
-*{box-sizing:border-box}body{margin:0;padding:12px;background:var(--bg);color:var(--fg);font:14px/1.4 system-ui,"Apple SD Gothic Neo","Malgun Gothic",sans-serif}
-.g{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}.c{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px}
-.big{font-size:26px;font-weight:700;color:var(--ac)}.m{color:var(--mut);font-size:12px}
-.bar{height:6px;background:var(--bd);border-radius:3px;overflow:hidden;margin:3px 0 8px}.bar>i{display:block;height:100%;background:var(--ac)}
-a{color:var(--ac);text-decoration:none;margin-right:10px}h4{margin:12px 0 6px}button{background:var(--card);color:var(--fg);border:1px solid var(--bd);border-radius:8px;padding:6px 12px;cursor:pointer}
-kbd{border:1px solid var(--bd);border-radius:4px;padding:0 4px;font-size:11px}
+/* Wandering-witch travel journal: parchment + ink, sapphire & blush accents. Tokens on :root, dark via prefers-color-scheme. */
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Noto+Sans+KR:wght@400;500;700&display=swap");
+:root{
+  --bg:#f7f1e6; --surface:#fffaf0; --ink:#2b2328; --mut:#6f5d61; --line:#e6d9c6;
+  --sap:#3550b8; --sap-soft:#dfe5fb; --blush:#e9c8bd; --sky:#7fcfd6; --gold:#c8923a;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px;
+  --r1:10px; --r2:18px; --shadow:0 1px 0 #fff8 inset,0 6px 18px -8px #4a3a2a33;
+  --serif:"Fraunces","Noto Serif KR",Georgia,serif; --sans:"Noto Sans KR",system-ui,"Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#17141f; --surface:#211d2e; --ink:#f1e9df; --mut:#b9a7a3; --line:#342e47;
+  --sap:#9db1ff; --sap-soft:#2b3358; --blush:#e0a99d; --sky:#7fcfd6; --gold:#e3b565;
+  --shadow:0 1px 0 #ffffff0d inset,0 8px 22px -10px #000a;}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--sans);padding:var(--s3);font-variant-numeric:lining-nums tabular-nums}
+.wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);box-shadow:var(--shadow);padding:var(--s4) var(--s5);position:relative;overflow:hidden}
+.wrap::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--blush),var(--sky),var(--sap))}
+h1,h2{font-family:var(--serif);font-weight:600;margin:0;letter-spacing:.01em}
+h2{font-size:20px;line-height:1.2}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:500}
+.mut{color:var(--mut);font-size:13px}
+.num{font-family:var(--serif);font-weight:700;font-variant-numeric:lining-nums tabular-nums}
+.rule{border:0;border-top:1px solid var(--line);margin:var(--s4) 0}
+.row{display:flex;align-items:center;gap:var(--s4)}
+.grow{flex:1;min-width:0}
+a{color:var(--sap);text-decoration:none;font-weight:500}
+a:hover{text-decoration:underline}
+a:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid var(--sap);outline-offset:2px;border-radius:6px}
+button{font:inherit;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:999px;padding:var(--s2) var(--s4);min-height:36px;cursor:pointer;transition:background .15s,border-color .15s}
+button:hover{background:var(--sap-soft);border-color:var(--sap)}
+button.primary kbd{color:inherit;border-color:#fff7}
+button.primary{background:var(--sap);color:var(--surface);border-color:var(--sap);font-weight:700}
+kbd{font:500 11px var(--sans);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;color:var(--mut)}
+svg{display:block}
+.ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}

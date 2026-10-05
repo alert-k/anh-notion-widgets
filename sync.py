@@ -381,6 +381,14 @@ out["month_days_ok"] = sum(1 for k, v in score.items() if k[:7] == today[:7] and
 wk = (now.date() - timedelta(days=6)).isoformat()
 ss = query_all(I["sessions"], {"property": "Date", "date": {"on_or_after": wk}})
 out["study_week_min"] = sum(prop(s, "Minutes") or 0 for s in ss)
+by_day = {}
+for s_ in ss:
+    k_ = (prop(s_, "Date") or "")[:10]
+    by_day[k_] = by_day.get(k_, 0) + (prop(s_, "Minutes") or 0)
+out["study_days"] = [{"d": (now.date() - timedelta(days=i)).isoformat(),
+                      "m": by_day.get((now.date() - timedelta(days=i)).isoformat(), 0)} for i in range(6, -1, -1)]
+out["routine_hist"] = [{"d": (now.date() - timedelta(days=i)).isoformat(),
+                        "s": score.get((now.date() - timedelta(days=i)).isoformat(), None)} for i in range(27, -1, -1)]
 
 apps = Counter(prop(a, "Status") for a in query_all(I["apps"]))
 out["apps"] = dict(apps)  # counts only, no company names
