@@ -4,3 +4,4 @@ __pycache__/
 art_private/
 .playwright-mcp/
 .deploy/
+.sync_cache.json

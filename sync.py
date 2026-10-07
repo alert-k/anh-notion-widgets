@@ -46,7 +46,8 @@ try:
     req = urllib.request.Request(f"https://api.github.com/search/commits?q={q}&per_page=1",
                                  headers={"Accept": "application/vnd.github+json", "User-Agent": "anh-sync"})
     n = json.load(urllib.request.urlopen(req, timeout=30))["total_count"]
-    api("PATCH", f"/pages/{dj[0]['id']}", {"properties": {"GitHub 커밋": {"number": n}}})
+    if (prop(dj[0], "GitHub 커밋") or 0) != n:
+        api("PATCH", f"/pages/{dj[0]['id']}", {"properties": {"GitHub 커밋": {"number": n}}})
 except Exception as e:  # never block sync on GitHub
     print("github skipped:", e)
 
@@ -127,6 +128,7 @@ def allocate_today(rm_pages):
     from vlib import rng  # Notion filters compare in UTC: use explicit KST day range
     autos = query_all(I["tasks"], {"and": [{"property": "Source", "select": {"equals": "lab 플랜"}}, rng("Due", today, today)]})
     spent = 0.0
+    existing_wait, want = {}, {}
     for t in autos:
         name = title_of(t)
         if name.startswith("[이번 주]"):
@@ -134,7 +136,8 @@ def allocate_today(rm_pages):
         if t["properties"]["Done"]["checkbox"]:
             spent += prop(t, "예상(h)") or 0
         elif prop(t, "Status") == "대기":
-            api("PATCH", f"/pages/{t['id']}", {"archived": True})  # re-planned below from the current schedule
+            d_ = t["properties"]["Due"]["date"] or {}
+            existing_wait[(name, (d_.get("start") or "")[11:16], (d_.get("end") or "")[11:16])] = t
 
     budget = STUDY_CAP_H - spent
     placed, i = [], 0
@@ -153,13 +156,19 @@ def allocate_today(rm_pages):
                  "Status": {"select": {"name": "대기"}}, "Area": {"select": {"name": "토스로드맵"}}, "Type": {"select": {"name": "Daily"}},
                  "Source": {"select": {"name": "lab 플랜"}}, "예상(h)": {"number": hrs}, "중요": {"select": {"name": "높음"}},
                  "긴급": {"select": {"name": "높음"}}, "Roadmap Unit": {"relation": [{"id": p_["id"]}]}}
-            api("POST", "/pages", {"parent": {"database_id": I["tasks"]}, "properties": P})
+            want[(f"[{tag}] {title_of(p_)} — {hrs}h", fmt_m(s), fmt_m(s + mins))] = P
             placed.append((s, s + mins, f"📚 {tag} {title_of(p_)[:18]}"))
             free[i] = (s + mins + BUFFER_MIN, e)
             budget -= mins / 60
             remaining -= mins / 60
             if free[i][1] - free[i][0] < MIN_BLOCK:
                 i += 1
+    for k_, t_ in existing_wait.items():       # only touch what changed
+        if k_ not in want:
+            api("PATCH", f"/pages/{t_['id']}", {"archived": True})
+    for k_, P_ in want.items():
+        if k_ not in existing_wait:
+            api("POST", "/pages", {"parent": {"database_id": I["tasks"]}, "properties": P_})
     # timeline for the home report
     left = [(s, e, "🟢 여유") for s, e in free if e - s >= MIN_BLOCK]
     return [f"{fmt_m(s)}–{fmt_m(e)} {n}" for s, e, n in sorted(busy + placed + left)]
@@ -227,8 +236,9 @@ def lab_sync(rm_pages, journal_page_id):
     day0 = pr.get("recall_day0", {})
     names = {prop(p_, "Unit ID"): title_of(p_) for p_ in rm_pages}
     done_today = [names.get(u, u) for u, d in day0.items() if d == today and status.get(u) == "done"]
-    api("PATCH", f"/pages/{journal_page_id}", {"properties": {
-        "Lab 완료": {"rich_text": rt(", ".join(done_today))}, **({"공부": {"checkbox": True}} if done_today else {})}})
+    if (prop(dj[0], "Lab 완료") or "") != ", ".join(done_today) or (done_today and not prop(dj[0], "공부")):
+        api("PATCH", f"/pages/{journal_page_id}", {"properties": {
+            "Lab 완료": {"rich_text": rt(", ".join(done_today))}, **({"공부": {"checkbox": True}} if done_today else {})}})
     print("lab sync: units changed", changed, "| done today", len(done_today))
     return changed
 
@@ -283,7 +293,8 @@ def study_auto():
     P = {"공부(h)": {"number": round(mins / 60, 1)}}
     if mins:
         P["공부"] = {"checkbox": True}
-    api("PATCH", f"/pages/{dj[0]['id']}", {"properties": P})
+    if P["공부(h)"]["number"] != (prop(dj[0], "공부(h)") or 0) or (mins and not prop(dj[0], "공부")):
+        api("PATCH", f"/pages/{dj[0]['id']}", {"properties": P})
 
 
 def make_note(unit_page):
@@ -393,8 +404,9 @@ out["routine_hist"] = [{"d": (now.date() - timedelta(days=i)).isoformat(),
 apps = Counter(prop(a, "Status") for a in query_all(I["apps"]))
 out["apps"] = dict(apps)  # counts only, no company names
 
-os.makedirs(os.path.join(ROOT, "docs"), exist_ok=True)
-json.dump(out, open(os.path.join(ROOT, "docs", "data.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+_od = os.environ.get("ANH_DATA_DIR") or os.path.join(ROOT, "docs")  # server: outside the repo, no git conflicts
+os.makedirs(_od, exist_ok=True)
+json.dump(out, open(os.path.join(_od, "data.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("synced", today, "streak", streak, "tasks", len(out["tasks"]))
 
 
@@ -451,10 +463,17 @@ R = {
     "wheel": "Life Wheel (낮은 순)" + NL + NL.join(
         f"{title_of(w)[:6]} {bar((prop(w, 'Score (1-10)') or 0) * 10)} {prop(w, 'Score (1-10)') or 0}" for w in wheel[:8]),
 }
+_cp = os.path.join(ROOT, ".sync_cache.json")
+try:
+    cache = json.load(open(_cp, encoding="utf-8"))
+except Exception:
+    cache = {}
 for k, text in R.items():
     bid = I.get("home:" + k)
-    if bid:
+    if bid and cache.get(k) != text:
         api("PATCH", f"/blocks/{bid}", {"callout": {"rich_text": rt(text)}})
+        cache[k] = text
+json.dump(cache, open(_cp, "w", encoding="utf-8"), ensure_ascii=False)
 print("home reports updated")
 
 

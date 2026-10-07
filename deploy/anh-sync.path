@@ -1,0 +1,12 @@
+[Unit]
+Description=Sync right away when lab.horyz.io progress changes
+
+[Path]
+# REPLACE with the real file the API writes (ROADMAP progress JSON), e.g. /opt/rtlab/api-server/roadmap_progress.json
+PathChanged=__PROGRESS_FILE__
+Unit=anh-sync.service
+TriggerLimitIntervalSec=10s
+TriggerLimitBurst=2
+
+[Install]
+WantedBy=multi-user.target

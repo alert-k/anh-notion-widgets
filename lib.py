@@ -40,7 +40,7 @@ def api(method, path, body=None):
     for attempt in range(6):
         try:
             with urllib.request.urlopen(req, timeout=60) as r:
-                time.sleep(0.34)  # ~3 req/s limit
+                time.sleep(0.3)  # ~3 req/s limit
                 return json.load(r)
         except urllib.error.HTTPError as e:
             msg = e.read().decode()
